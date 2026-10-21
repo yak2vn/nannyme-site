@@ -1,0 +1,43 @@
+# main への push をデプロイ用ミラー (logical-fabrics/nannyme-site) へ転送する。
+# ミラー側の Cloudflare Workers Builds がビルドとデプロイを行う。
+# MIRROR_DEPLOY_KEY はミラー1リポジトリにだけ書き込める SSH Deploy Key。
+name: Mirror for deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-deploy
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Push main to mirror
+        env:
+          MIRROR_DEPLOY_KEY: ${{ secrets.MIRROR_DEPLOY_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ -z "$MIRROR_DEPLOY_KEY" ]; then
+            echo "::warning::MIRROR_DEPLOY_KEY が未設定のため転送をスキップしました"
+            exit 0
+          fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$MIRROR_DEPLOY_KEY" > ~/.ssh/mirror_key
+          chmod 600 ~/.ssh/mirror_key
+          # GitHub 公開のホスト鍵 (https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints)
+          echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > ~/.ssh/known_hosts
+          git init -q repo
+          cd repo
+          git -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+            fetch -q --no-tags "https://github.com/${GITHUB_REPOSITORY}.git" "+${GITHUB_SHA}:refs/heads/main"
+          GIT_SSH_COMMAND="ssh -i ~/.ssh/mirror_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            git push --force git@github.com:logical-fabrics/nannyme-site.git main:main
