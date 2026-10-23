@@ -203,8 +203,8 @@ function HomePage() {
       </section>
       <div className="page-width"><RegisterBanner /></div>
       <section className="feature-banners page-width" aria-label="オンラインレッスンの案内">
-        <a href={`${appUrl}/`}><img src={media("IMG_0336-768x464.jpg")} alt="英会話とオンラインレッスンのNanny紹介" /></a>
-        <a href={`${appUrl}/`}><img src={media("IMG_0337-768x464.jpg")} alt="NannyMEのオンライン保育アプリ" /></a>
+        <a href={`${appUrl}/`}><img src={media("home-trial-lesson-banner.png")} alt="NannyTime 30分1回無料体験とクーポンコード N2026 の案内" /></a>
+        <a href={`${appUrl}/`}><img src={media("home-skill-list-banner.png")} alt="英会話、音楽、算数などNannyMEのレッスン一覧と公式サイトのQRコード" /></a>
       </section>
       <section className="age-stories page-width" aria-label="年齢別の利用イメージ">
         <div className="age-tabs" role="tablist" aria-label="年齢・利用者別">
